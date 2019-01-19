@@ -1,3 +1,34 @@
+.dad-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+
+  border-radius: 20px;
+}
+.main-container{
+  justify-content: center;
+  width: 500px;
+  height: 500px;
+  background-color: #eaeaea;
+  align-items: center;
+  border-radius: 40px;
+  text-align: center;
+  padding-top: 30px;
+  /* display: flex;
+  justify-content: center;
+  flex-direction: column; */
+
+}
+
+h2{
+  color: blue;
+  display: 100%;
+
+}
+
+
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
