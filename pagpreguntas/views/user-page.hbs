@@ -1,0 +1,31 @@
+<h1>Hola {{username}}!!!</h1>
+
+
+<p>Bienvenido a Ake me!</p>
+
+<div>
+<ul>
+  <li><a class="" href="/">Hacer un ask me!</a></li>
+  <li><a class="" href="/">Checa tus respuestas</a></li>
+  <li><a class="" href="/">Hacer un ask me!</a></li>
+</ul>
+</div>
+
+
+<h3>Tus preguntas</h3>
+{{#each pregunta}}
+    <p>
+        <a href="/{{this._id}}">{{this.Pregunta}}</a> 
+    </p>
+{{/each}}
+
+
+<h3>Respuestas recibidas</h3>
+{{#each respuesta}}
+    <p>
+        <a href="/{{this._id}}">{{this.Respuesta}}</a> 
+    </p>
+{{/each}}
+
+
+
