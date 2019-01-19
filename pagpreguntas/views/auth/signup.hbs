@@ -1,0 +1,32 @@
+
+
+<h1>Ask me!</h1>
+
+
+<h3>Sign Up!</h3>
+
+
+<form id="form-container" action="/signup" method="post">
+
+  <label for="username">Nombre de usuario</label>
+  <input type="text" name="username" placeholder="ingresa nombre de usuario" id="username">
+
+  <label for="password">Contraseña</label>
+  <input type="password" name="password" placeholder="Ingresa tu contraseña" id="password">
+
+  <button type="submit" name="button">Crear cuenta</button>
+
+
+{{#if errorMessage}}
+  <div class="error-message">
+    {{errorMessage}}
+  </div>
+{{/if}}
+
+
+  <p class="acount-message">Ya tienes cuenta?<a href="/login">Ingresa aqui</a></p>
+
+</form>
+
+
+
