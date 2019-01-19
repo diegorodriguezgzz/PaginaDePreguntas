@@ -12,13 +12,13 @@ const session      = require ('express-session')
 const bcrypt       = require ('bcrypt')
 const passport     = require ('passport')
 const LocalStrategy = require ('passport-local').Strategy
-const User         = require ('./models/user')
+const User         = require ('./models/User')
 const flash        = require ('connect-flash')
 const SlackStrategy = require ('passport-slack').Strategy
 const GoogleStrategy = require ('passport-google-oauth').OAuth2Strategy
 
 mongoose
-  .connect('mongodb://127.0.0.1/clasejueves', {useNewUrlParser: true})
+  .connect(`mongodb://${process.env.DBUSER}:${process.env.DBPASS}@ds161144.mlab.com:61144/askme-db`, {useNewUrlParser: true})
   .then(x => {
     console.log(`Connected to Mongo! Database name: "${x.connections[0].name}"`)
   })
