@@ -1,7 +1,7 @@
-
-
 <h1>Ask me!</h1>
 
+<div class="dad-container">
+  <div class="main-container">
 
 <h3>Sign Up!</h3>
 
@@ -16,6 +16,15 @@
 
   <button type="submit" name="button">Crear cuenta</button>
 
+</div>
+
+      {{# if message}}
+
+      <div class="error-message">
+        {{message}}
+     </div>
+        {{/if}}
+</div>
 
 {{#if errorMessage}}
   <div class="error-message">
@@ -27,6 +36,3 @@
   <p class="acount-message">Ya tienes cuenta?<a href="/login">Ingresa aqui</a></p>
 
 </form>
-
-
-

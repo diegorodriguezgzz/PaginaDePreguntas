@@ -8,10 +8,17 @@ const hbs          = require('hbs');
 const mongoose     = require('mongoose');
 const logger       = require('morgan');
 const path         = require('path');
-
+const session      = require ('express-session')
+const bcrypt       = require ('bcrypt')
+const passport     = require ('passport')
+const LocalStrategy = require ('passport-local').Strategy
+const User         = require ('./models/User')
+const flash        = require ('connect-flash')
+const SlackStrategy = require ('passport-slack').Strategy
+const GoogleStrategy = require ('passport-google-oauth').OAuth2Strategy
 
 mongoose
-  .connect('mongodb://localhost/pagpreguntas', {useNewUrlParser: true})
+  .connect(`mongodb://${process.env.DBUSER}:${process.env.DBPASS}@ds161144.mlab.com:61144/askme-db`, {useNewUrlParser: true})
   .then(x => {
     console.log(`Connected to Mongo! Database name: "${x.connections[0].name}"`)
   })
@@ -29,6 +36,96 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({
+  secret:'jajlklkhnvlknvkdlnbdvklsnblsdnbñsldnb',
+  resave:true,
+  saveUninitialized:true
+}))
+
+passport.serializeUser((user, callback)=>{
+  callback(null, user._id)
+})
+
+passport.deserializeUser((id,callback)=>{
+  User.findById(id, (err, user)=>{
+    if (err) {return callback(err)}
+    callback(null,user)
+  })
+})
+
+passport.use (new GoogleStrategy({
+  clientID:"434755775877-7ln8la094h9e3esuho4kbth1us7msph2.apps.googleusercontent.com",
+  clientSecret: "m0yehgaZ3RQTFs4XX5WMluiQ",
+  callbackURL:"/auth/google/callback"
+},(accessToken, refreshToken, profile, done)=>{
+  User.findOne({ googleID:profile.id})
+  .then(user =>{
+    //if (err){
+      //return done (err);
+    //}
+    if (user){
+      return done ( null, user);
+    }
+    const newUser = new User ({
+      googleID: profile.id
+    });
+    newUser.save()
+    .then(user =>{
+      done(null, newUser);
+    })
+  })
+  .catch(error =>{
+    done(error)
+  })
+}));
+
+
+passport.use(new SlackStrategy({
+  clientID: "2432150752.526320548209",
+  clientSecret:"8d7c75a0ef5ae3c9d54f243d98047f5f"
+},(accesToken,refreshToken, profile, done)=>{
+  User.findOne({ slackID:profile.id})
+  .then(user =>{
+    //if (err){
+      //return done (err);
+    //}
+    if (user){
+      return done (null, user);
+    }
+    const newUser = new User ({
+      slackID: profile.id
+    });
+
+    newUser.save()
+    .then (user =>{
+      done ( null.newUser);
+    })
+  })
+  .catch(error =>{
+    done(error)
+  })
+
+}));
+
+
+passport.use(new LocalStrategy((username, password, next)=>{
+  User.findOne({username}, (err, user)=>{
+    if (err)
+    return (next(err))
+
+    if(!user){
+      return next (null, false,{message:"Usuario incorrecto"})
+    }
+    if (!bcrypt.compareSync (password, user.password)){
+      return next(null, false, {message:"Contraseña incorrecta"})
+    }
+    return next (null, user)
+  })
+}))
+
+app.use(flash())
+app.use(passport.initialize())
+app.use(passport.session())
 
 // Express View engine setup
 
@@ -37,7 +134,7 @@ app.use(require('node-sass-middleware')({
   dest: path.join(__dirname, 'public'),
   sourceMap: true
 }));
-      
+
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
@@ -53,6 +150,9 @@ app.locals.title = 'Express - Generated with IronGenerator';
 
 const index = require('./routes/index');
 app.use('/', index);
+
+const authRoutes = require ('./routes/auth-routes')
+app.use('/', authRoutes)
 
 
 module.exports = app;
