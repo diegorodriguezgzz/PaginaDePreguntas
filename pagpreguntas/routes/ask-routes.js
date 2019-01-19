@@ -11,11 +11,11 @@ const Interes = require("./models/Interes");
 const bcrypt = require("bcrypt");
 const bcryptSalt = 10;
 
-authRoutes.get("/signup",(req,res,next)=>{
+askRoutes.get("/signup",(req,res,next)=>{
   res.render("auth/signup");
 });
 
-authRoutes.post("/signup",(req,res,next)=>{
+askRoutes.post("/signup",(req,res,next)=>{
   const username=req.body.username;
   const password=req.body.password;
 
@@ -53,10 +53,10 @@ authRoutes.post("/signup",(req,res,next)=>{
     newUser.save((err)=>{
       if(err){
         res.render("auth/signup",{
-          message: "Algo salio mal y no pude guardar tu registro. Intetalo de nuevo mas tarde"
+          message: "No fue posible guardar el registro. Intetalo mas tarde"
         })
       }else{
-        res.redirect("/");
+        res.redirect("/login");
       }
     })
   })
@@ -65,32 +65,111 @@ authRoutes.post("/signup",(req,res,next)=>{
   })
 })
 
-authRoutes.get("/login",(req,res,next)=>{
+askRoutes.get("/login",(req,res,next)=>{
   res.render("auth/login", {message:req.flash("error")})
 })
 
-authRoutes.post("/login", passport.authenticate("local",{
+askRoutes.post("/login", passport.authenticate("local",{
   successRedirect:"/private-page",
   failureRedirect:"/login",
   failureFlash:true,
   passReqToCallback:true
 }))
 
-authRoutes.get("/private-page", ensureLogin.ensureLoggedIn(),(req,res,next)=>{
-  res.render("private",{user:req.user})
+askRoutes.get("/userpage", ensureLogin.ensureLoggedIn(),(req,res,next)=>{
+  res.render("user-page",{user:req.user})
 })
 
-authRoutes.get("/logout",(req,res,next)=>{
+/////////////////////////////////Slack login////////////////////
+askRoutes.get("/auth/slack", passport.authenticate("slack"));
+askRoutes.get("/auth/slack/callback", passport.authenticate("slack", {
+  successRedirect: "/userpage",
+  failureRedirect: "/"
+}));
+
+////////////////////Consultas sin login//////////////////////////
+router.get('/preguntas', (req, res)=>{
+  Pregunta.find()
+    .populate("tag", "respuestas")
+    .then(preguntas =>{
+      res.render('preguntas-all', {preguntas})
+    })
+    .catch(err =>{
+      console.log(err)
+    })
+})
+
+router.get('/preguntas/:cat', (req, res)=>{
+  const cat = req.params.cat;
+  Pregunta.find({tag : cat})
+    .populate("tag", "respuestas")
+    .then(preguntas =>{
+      res.render('preguntas-all', {preguntas})
+    })
+    .catch(err =>{
+      console.log(err)
+    })
+})
+
+
+////////////////////CRUD preguntas login/////////////////////////
+//Consultas
+router.get('/preguntas/:id/user', (req, res)=>{
+  User.find()
+    .populate("preguntas","respuestas","tags")
+    .then(user =>{
+      res.render('preguntas-all', {user})
+    })
+    .catch(err =>{
+      console.log(err)
+    })
+})
+
+router.get('/preguntas/:cat/consulta/:id/user', (req, res)=>{
+  const cat = req.params.cat;
+  const id = req.params.id;
+  User.find($and[{'_id': id},{"tag": cat}])
+    .populate("tag", "respuestas")
+    .then(user =>{
+      res.render('preguntas-all', {user})
+    })
+    .catch(err =>{
+      console.log(err)
+    })
+})
+
+//Altas
+router.get("/preguntas/:id/add",(req,res)=>{
+  res.render("pregunta-nueva")
+})
+
+router.post("/preguntas/add",(req,res)=>{
+  const {pregunta,tag[]} = req.body;
+  const newPregunta = new Pregunta({pregunta,tag});
+  newPregunta.save()
+  .then((pregunta)=>{
+    res.redirect(301,"/preguntas")
+  })
+  .catch(err=>console.log(err));
+})
+
+router.post('/preguntas/:id/delete', (req, res)=>{
+  let preguntaId = req.params.id
+  console.log(preguntaId);
+  Pregunta.findByIdAndRemove({'_id': preguntaId})
+  .then((pregunta)=>{
+    res.render('/preguntas')
+  })
+  .catch((err)=>{
+    console.log(err);
+  })
+})
+
+
+
+askRoutes.get("/logout",(req,res,next)=>{
   req.logout();
   res.redirect("login");
 })
 
-/////////////////////////////////Slack login////////////////////
-authRoutes.get("/auth/slack", passport.authenticate("slack"));
-authRoutes.get("/auth/slack/callback", passport.authenticate("slack", {
-  successRedirect: "/private-page",
-  failureRedirect: "/"
-}));
-////////////////////////////////////////////////////////////////
-
-module.exports= authRoutes;
+module.exports= askRoutes;
